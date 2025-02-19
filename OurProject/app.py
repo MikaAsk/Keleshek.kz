@@ -13,7 +13,11 @@ if not os.path.exists("static"):
     os.makedirs("static")
 
 @app.route("/")
-def index():
+def home():
+    return render_template("home.html")  # Теперь главная страница — это заглушка
+
+@app.route("/analytics")
+def analytics():
     city = request.args.get("city")  
     filtered_df = df.copy()
 
@@ -50,10 +54,6 @@ def index():
 @app.route("/universities")
 def universities():
     return render_template("universities.html")
-
-@app.route("/analytics")
-def analytics():
-    return render_template("index.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
