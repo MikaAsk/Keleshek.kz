@@ -39,25 +39,25 @@
 
     <div class="container">
         <h1>Анализ вакансий</h1>
-<form action="/" method="get">
-    <label for="city">Выберите город:</label>
-    <select name="city" id="city">
-        <option value="">Все</option>
-        {% for c in cities %}
-            <option value="{{ c }}" {% if city == c %}selected{% endif %}>{{ c }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit">Фильтровать</button>
-</form>
+        <form action="/" method="get">
+            <label for="city">Выберите город:</label>
+            <select name="city" id="city">
+                <option value="">Все</option>
+                {% for c in cities %}
+                    <option value="{{ c }}" {% if city == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Фильтровать</button>
+        </form>
+
         <h2>Графики</h2>
         <div class="charts">
-            <iframe src="{{ url_for('Static', filename='chart1.html') }}"></iframe>
-            <iframe src="{{ url_for('Static', filename='chart2.html') }}"></iframe>
-            <iframe src="{{ url_for('Static', filename='chart3.html') }}"></iframe>
-            <iframe src="{{ url_for('Static', filename='chart4.html') }}"></iframe>
+            <iframe src="{{ url_for('static', filename='chart1.html') }}"></iframe>
+            <iframe src="{{ url_for('static', filename='chart2.html') }}"></iframe>
+            <iframe src="{{ url_for('static', filename='chart3.html') }}"></iframe>
+            <iframe src="{{ url_for('static', filename='chart4.html') }}"></iframe>
         </div>
     </div>
 
 </body>
 </html>
-
