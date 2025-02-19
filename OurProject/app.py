@@ -9,8 +9,8 @@ app = Flask(__name__)
 df = pd.read_csv("vacancies_january_2.csv")
 
 # Создаем папку для графиков, если её нет
-if not os.path.exists("Static"):
-    os.makedirs("Static")
+if not os.path.exists("static"):
+    os.makedirs("static")
 
 @app.route("/")
 def index():
@@ -27,7 +27,7 @@ def index():
     if not filtered_df.empty:  
         top_jobs = filtered_df['name'].value_counts().nlargest(10)
         fig1 = px.bar(x=top_jobs.index, y=top_jobs.values, title="Топ-10 профессий", labels={'x': 'Профессия', 'y': 'Количество'})
-        fig1.write_html("Static/chart1.html")  
+        fig1.write_html("static/chart1.html")  
 
     # График по зарплатам
     if "salary_from" in filtered_df.columns and not filtered_df["salary_from"].isna().all():
@@ -36,17 +36,17 @@ def index():
 
         if not filtered_df.empty:  
             fig2 = px.histogram(filtered_df, x="salary_from", title="Распределение зарплат", labels={'salary_from': 'Зарплата'})
-            fig2.write_html("Static/chart2.html")
+            fig2.write_html("static/chart2.html")
 
     # График по городам
     city_counts = df["city"].value_counts().nlargest(10)
     fig3 = px.bar(x=city_counts.index, y=city_counts.values, title="Топ-10 городов по количеству вакансий", labels={'x': 'Город', 'y': 'Количество вакансий'})
-    fig3.write_html("Static/chart3.html")
+    fig3.write_html("static/chart3.html")
 
     # График средней зарплаты по городам
     salary_by_city = df.groupby("city")["salary_from"].mean().nlargest(10)
     fig4 = px.bar(x=salary_by_city.index, y=salary_by_city.values, title="Средняя зарплата по городам", labels={'x': 'Город', 'y': 'Средняя зарплата'})
-    fig4.write_html("Static/chart4.html")
+    fig4.write_html("static/chart4.html")
 
     return render_template("index.html", city=city, cities=cities)  
     
