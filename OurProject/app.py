@@ -49,3 +49,4 @@ def index():
     fig4.write_html("Static/chart4.html")
 
     return render_template("index.html", city=city, cities=cities)  
+    
