@@ -31,10 +31,13 @@ if "latitude" in filtered_df.columns and "longitude" in filtered_df.columns:
         lat="latitude", lon="longitude", 
         hover_name="name", 
         hover_data=["salary_from", "salary_currency", "employer_name"], 
-        zoom=4, height=600, width=1100  # Увеличенные размеры
+        zoom=4
     )
-    fig_map.update_layout(mapbox_style="open-street-map", margin={"r":0,"t":0,"l":0,"b":0})
-    st.plotly_chart(fig_map, use_container_width=True)  # Растягиваем на всю ширину
+    fig_map.update_layout(
+        mapbox_style="open-street-map",
+        margin={"r":0, "t":0, "l":0, "b":0}
+    )
+    st.plotly_chart(fig_map, use_container_width=True)  # 🔹 Адаптивная ширина
 else:
     st.warning("Нет данных с координатами для отображения карты.")
 
@@ -44,10 +47,10 @@ fig2 = px.histogram(
     filtered_df, 
     x="salary_from", 
     nbins=20, 
-    title="Распределение вакансий по зарплатам", 
-    color_discrete_sequence=['blue'], 
-    width=1100, height=500  # Увеличенные размеры
+    title="Распределение вакансий по зарплатам",
+    color_discrete_sequence=['blue']
 )
+fig2.update_layout(margin={"r":10, "t":30, "l":10, "b":30})  # 🔹 Улучшенные отступы
 st.plotly_chart(fig2, use_container_width=True)
 
 # --- Доля типов занятости ---
@@ -58,9 +61,9 @@ fig3 = px.pie(
     employment_counts, 
     names="employment_type", 
     values="count", 
-    title="Доля типов занятости", 
-    width=900, height=500  # Увеличенные размеры
+    title="Доля типов занятости"
 )
+fig3.update_layout(margin={"r":10, "t":30, "l":10, "b":30})  # 🔹 Улучшенные отступы
 st.plotly_chart(fig3, use_container_width=True)
 
 # --- Требуемый опыт работы ---
@@ -71,9 +74,9 @@ fig4 = px.pie(
     experience_counts, 
     names="experience", 
     values="count", 
-    title="Распределение по опыту работы", 
-    width=900, height=500  # Увеличенные размеры
+    title="Распределение по опыту работы"
 )
+fig4.update_layout(margin={"r":10, "t":30, "l":10, "b":30})  # 🔹 Улучшенные отступы
 st.plotly_chart(fig4, use_container_width=True)
 
 # --- Топ-20 работодателей ---
@@ -85,8 +88,11 @@ fig5 = px.bar(
     x="employer_name", 
     y="count", 
     title="Топ-20 работодателей по количеству вакансий", 
-    color="employer_name", 
-    width=1100, height=600  # Увеличенные размеры
+    color="employer_name"
+)
+fig5.update_layout(
+    xaxis_tickangle=-45,  # 🔹 Улучшенный наклон подписей
+    margin={"r":10, "t":30, "l":10, "b":30}
 )
 st.plotly_chart(fig5, use_container_width=True)
 
@@ -104,15 +110,15 @@ fig_demand = px.bar(
     y="count", 
     title="Топ-20 востребованных профессий",
     color="count",
-    color_continuous_scale="Blues",
-    width=1100, height=600  # Увеличенные размеры
+    color_continuous_scale="Blues"
 )
 
 # Улучшаем отображение подписей
 fig_demand.update_layout(
     xaxis_title="Профессия",
     yaxis_title="Количество вакансий",
-    xaxis_tickangle=-45
+    xaxis_tickangle=-45,  # 🔹 Улучшенный наклон подписей
+    margin={"r":10, "t":30, "l":10, "b":30}
 )
 
 st.plotly_chart(fig_demand, use_container_width=True)
