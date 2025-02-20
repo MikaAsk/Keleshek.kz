@@ -51,31 +51,35 @@ if not filtered_df.empty:
 else:
     st.warning("⚠️ Нет данных для отображения карты.")
 
+
+import plotly.graph_objects as go
+
 # 💰 Улучшенная гистограмма зарплат с градиентом
 st.markdown("<h2 class='sub-title'>💰 Распределение зарплат</h2>", unsafe_allow_html=True)
 
 # Фильтруем данные, убираем пропущенные значения
 salary_filtered = filtered_df.dropna(subset=["salary_from"])
 
-# Создаем bins для распределения зарплат
-fig_salary = px.histogram(
-    salary_filtered, 
-    x="salary_from", 
-    nbins=30, 
-    title="Распределение вакансий по зарплатам",
-    color="salary_from",  
-    color_continuous_scale="bluered",  # Градиент от синего к красному
+# Создаем бины для гистограммы
+hist_data = go.Histogram(
+    x=salary_filtered["salary_from"],
+    nbinsx=30,
+    marker=dict(
+        color=salary_filtered["salary_from"],  # Цвет зависит от значения
+        colorscale="Bluered",  # Градиент от синего к красному
+        showscale=True,  # Добавляем легенду сбоку
+        colorbar=dict(title="Уровень зарплаты")  # Заголовок легенды
+    )
 )
 
-# Настраиваем стили
+# Создаем фигуру
+fig_salary = go.Figure(data=[hist_data])
+
+# Настраиваем стиль
 fig_salary.update_layout(
+    title="Распределение вакансий по зарплатам",
     xaxis_title="Зарплата",
     yaxis_title="Количество вакансий",
-    coloraxis_colorbar=dict(
-        title="Уровень зарплаты",  
-        tickvals=[salary_filtered["salary_from"].min(), salary_filtered["salary_from"].max()],
-        ticktext=["Низкие зарплаты", "Высокие зарплаты"],
-    ),
     margin=dict(l=40, r=40, t=40, b=40),  
 )
 
