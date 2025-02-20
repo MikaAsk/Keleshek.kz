@@ -3,3 +3,5 @@ gunicorn
 pandas
 plotly
 streamlit
+folium
+streamlit-folium
