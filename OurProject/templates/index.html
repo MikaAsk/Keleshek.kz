@@ -4,64 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Аналитика рынка труда</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <div class="container mt-4">
-        <h1 class="text-center">Аналитика рынка труда</h1>
+    <h1>📊 Дашборд аналитики рынка труда</h1>
 
-        <!-- Форма фильтрации -->
-        <form method="POST" class="row g-3">
-            <div class="col-md-4">
-                <label for="region" class="form-label">Регион</label>
-                <select name="region" id="region" class="form-control">
-                    <option value="">Все</option>
-                    {% for region in regions %}
-                    <option value="{{ region }}">{{ region }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label for="industry" class="form-label">Отрасль</label>
-                <select name="industry" id="industry" class="form-control">
-                    <option value="">Все</option>
-                    {% for industry in industries %}
-                    <option value="{{ industry }}">{{ industry }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label for="profession" class="form-label">Профессия</label>
-                <select name="profession" id="profession" class="form-control">
-                    <option value="">Все</option>
-                    {% for profession in professions %}
-                    <option value="{{ profession }}">{{ profession }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-12 text-center mt-3">
-                <button type="submit" class="btn btn-primary">Применить</button>
-            </div>
-        </form>
+    <form id="filters">
+        <label>Регион:</label>
+        <select name="region">
+            <option value="">Все</option>
+            {% for region in regions %}
+                <option value="{{ region }}">{{ region }}</option>
+            {% endfor %}
+        </select>
 
-        <!-- Графики -->
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <h3>Средняя зарплата</h3>
-                {{ salary_chart|safe }}
-            </div>
-            <div class="col-md-6">
-                <h3>Спрос vs Предложение</h3>
-                {{ demand_supply_chart|safe }}
-            </div>
-        </div>
+        <label>Отрасль:</label>
+        <select name="industry">
+            <option value="">Все</option>
+            {% for industry in industries %}
+                <option value="{{ industry }}">{{ industry }}</option>
+            {% endfor %}
+        </select>
 
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <h3>Популярные навыки</h3>
-                {{ skills_chart|safe }}
-            </div>
-        </div>
+        <label>Профессия:</label>
+        <select name="profession">
+            <option value="">Все</option>
+            {% for profession in professions %}
+                <option value="{{ profession }}">{{ profession }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">🔍 Анализировать</button>
+    </form>
+
+    <div id="charts">
+        <p>Выберите фильтры и нажмите "Анализировать"</p>
     </div>
+
+    <script>
+        $(document).ready(function() {
+            $("#filters").submit(function(event) {
+                event.preventDefault();
+                $.ajax({
+                    type: "POST",
+                    url: "/chart",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        region: $("select[name='region']").val(),
+                        industry: $("select[name='industry']").val(),
+                        profession: $("select[name='profession']").val()
+                    }),
+                    success: function(response) {
+                        $("#charts").html(
+                            response.salary_chart +
+                            response.demand_supply_chart +
+                            response.skills_chart +
+                            response.industry_chart
+                        );
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
