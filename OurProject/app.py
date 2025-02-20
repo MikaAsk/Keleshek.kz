@@ -37,7 +37,8 @@ if "latitude" in filtered_df.columns and "longitude" in filtered_df.columns:
         mapbox_style="open-street-map",
         margin={"r":0, "t":0, "l":0, "b":0}
     )
-    st.plotly_chart(fig_map, use_container_width=True)  # 🔹 Адаптивная ширина
+    st.plotly_chart(fig_map, use_container_width=True)
+    st.write(f"В выбранном регионе представлено {len(filtered_df)} вакансий.")
 else:
     st.warning("Нет данных с координатами для отображения карты.")
 
@@ -50,8 +51,10 @@ fig2 = px.histogram(
     title="Распределение вакансий по зарплатам",
     color_discrete_sequence=['blue']
 )
-fig2.update_layout(margin={"r":10, "t":30, "l":10, "b":30})  # 🔹 Улучшенные отступы
+fig2.update_layout(margin={"r":10, "t":30, "l":10, "b":30})
 st.plotly_chart(fig2, use_container_width=True)
+if not filtered_df.empty:
+    st.write(f"Средняя зарплата в выбранной категории составляет {filtered_df['salary_from'].mean():,.0f} тенге.")
 
 # --- Доля типов занятости ---
 st.subheader("📌 Типы занятости")
@@ -63,8 +66,11 @@ fig3 = px.pie(
     values="count", 
     title="Доля типов занятости"
 )
-fig3.update_layout(margin={"r":10, "t":30, "l":10, "b":30})  # 🔹 Улучшенные отступы
+fig3.update_layout(margin={"r":10, "t":30, "l":10, "b":30})
 st.plotly_chart(fig3, use_container_width=True)
+if not employment_counts.empty:
+    top_employment = employment_counts.iloc[0]
+    st.write(f"Наибольшая доля вакансий приходится на {top_employment['employment_type']} ({top_employment['count']} вакансий).")
 
 # --- Требуемый опыт работы ---
 st.subheader("🎯 Требуемый опыт работы")
@@ -76,8 +82,11 @@ fig4 = px.pie(
     values="count", 
     title="Распределение по опыту работы"
 )
-fig4.update_layout(margin={"r":10, "t":30, "l":10, "b":30})  # 🔹 Улучшенные отступы
+fig4.update_layout(margin={"r":10, "t":30, "l":10, "b":30})
 st.plotly_chart(fig4, use_container_width=True)
+if not experience_counts.empty:
+    top_experience = experience_counts.iloc[0]
+    st.write(f"Большинство работодателей ищут специалистов с опытом {top_experience['experience']} ({top_experience['count']} вакансий).")
 
 # --- Топ-20 работодателей ---
 st.subheader("🏢 Топ-20 работодателей по количеству вакансий")
@@ -91,19 +100,18 @@ fig5 = px.bar(
     color="employer_name"
 )
 fig5.update_layout(
-    xaxis_tickangle=-45,  # 🔹 Улучшенный наклон подписей
+    xaxis_tickangle=-45,
     margin={"r":10, "t":30, "l":10, "b":30}
 )
 st.plotly_chart(fig5, use_container_width=True)
+if not top_employers.empty:
+    st.write(f"Крупнейший работодатель по количеству вакансий: {top_employers.iloc[0]['employer_name']} ({top_employers.iloc[0]['count']} вакансий).")
 
 # --- Востребованность профессии ---
 st.subheader("📊 Востребованность профессии")
 
-# Выбираем топ-20 профессий
 demand_counts = filtered_df["professional_role"].value_counts().nlargest(20).reset_index()
 demand_counts.columns = ["professional_role", "count"]
-
-# Строим график
 fig_demand = px.bar(
     demand_counts, 
     x="professional_role", 
@@ -112,13 +120,12 @@ fig_demand = px.bar(
     color="count",
     color_continuous_scale="Blues"
 )
-
-# Улучшаем отображение подписей
 fig_demand.update_layout(
     xaxis_title="Профессия",
     yaxis_title="Количество вакансий",
-    xaxis_tickangle=-45,  # 🔹 Улучшенный наклон подписей
+    xaxis_tickangle=-45,
     margin={"r":10, "t":30, "l":10, "b":30}
 )
-
-st.plotly_chart(fig_demand, use_container_width=True) 
+st.plotly_chart(fig_demand, use_container_width=True)
+if not demand_counts.empty:
+    st.write(f"Самая востребованная профессия: {demand_counts.iloc[0]['professional_role']} ({demand_counts.iloc[0]['count']} вакансий).")
