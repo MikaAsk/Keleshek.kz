@@ -1,0 +1,19 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+form {
+    margin-bottom: 20px;
+}
+button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
+#charts {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
