@@ -31,7 +31,7 @@ def index():
                           color="Salary")
 
     # График 2: Соотношение вакансий и резюме
-    demand_supply_chart = px.line(filtered_df.groupby("Profession")["Job Openings", "Resumes"].sum().reset_index(),
+   demand_supply_chart = px.line(filtered_df.groupby("Profession")[["Job Openings", "Resumes"]].sum().reset_index(),
                                   x="Profession", y=["Job Openings", "Resumes"],
                                   title="Спрос (вакансии) vs предложение (резюме)",
                                   labels={"value": "Количество", "Profession": "Профессия"},
