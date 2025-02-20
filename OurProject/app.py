@@ -2,88 +2,111 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# --- Функция загрузки данных ---
+# 🔹 Настройка страницы
+st.set_page_config(page_title="Аналитика вакансий", layout="wide")
+
+# 🎨 Стилизация
+st.markdown("""
+    <style>
+        body {background-color: #f5f7fa;}
+        .main-title {text-align: center; font-size: 28px; font-weight: bold; color: #333;}
+        .sub-title {font-size: 20px; font-weight: bold; margin-bottom: 10px; color: #555;}
+        .stPlotlyChart {background: white; padding: 15px; border-radius: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);}
+    </style>
+""", unsafe_allow_html=True)
+
+# 📥 Загружаем данные
 @st.cache_data
 def load_data():
     return pd.read_csv("vacancies_january_2.csv")
 
 df = load_data()
 
-# --- Инициализация состояния ---
-if "page" not in st.session_state:
-    st.session_state.page = "Home"
+# 🎛️ Фильтры (слева)
+with st.sidebar:
+    st.header("🔍 Фильтры")
+    city = st.selectbox("🏙 Город:", ["Все"] + list(df["city"].dropna().unique()))
+    role = st.selectbox("💼 Профессия:", ["Все"] + list(df["professional_role"].dropna().unique()))
 
-if "city" not in st.session_state:
-    st.session_state.city = "Все"
-if "role" not in st.session_state:
-    st.session_state.role = "Все"
-if "employment_type" not in st.session_state:
-    st.session_state.employment_type = "Все"
-if "experience" not in st.session_state:
-    st.session_state.experience = "Все"
+filtered_df = df.copy()
+if city != "Все":
+    filtered_df = filtered_df[filtered_df["city"] == city]
+if role != "Все":
+    filtered_df = filtered_df[filtered_df["professional_role"] == role]
 
-# --- Функции навигации и сброса фильтров ---
-def navigate(page):
-    st.session_state.page = page
+filtered_df = filtered_df.dropna(subset=["latitude", "longitude"])
 
-def reset_filters():
-    st.session_state.city = "Все"
-    st.session_state.role = "Все"
-    st.session_state.employment_type = "Все"
-    st.session_state.experience = "Все"
+# 🏆 Основной заголовок
+st.markdown("<h1 class='main-title'>Аналитика рынка труда</h1>", unsafe_allow_html=True)
 
-# --- Боковая панель навигации ---
-st.sidebar.title("Навигация")
-st.sidebar.button("🏠 Home", on_click=navigate, args=("Home",))
-st.sidebar.button("📊 Analytics", on_click=navigate, args=("Analytics",))
-st.sidebar.button("🎓 Universities", on_click=navigate, args=("Universities",))
+# 📌 Карта вакансий
+st.markdown("<h2 class='sub-title'>🌍 Карта вакансий</h2>", unsafe_allow_html=True)
+if not filtered_df.empty:
+    fig_map = px.scatter_mapbox(
+        filtered_df, lat="latitude", lon="longitude", hover_name="name",
+        hover_data=["salary_from", "salary_currency", "employer_name"], zoom=4, height=500
+    )
+    fig_map.update_layout(mapbox_style="open-street-map", margin={"r":0,"t":0,"l":0,"b":0})
+    st.plotly_chart(fig_map, use_container_width=True)
+else:
+    st.warning("⚠️ Нет данных для отображения карты.")
 
-# --- Главная страница ---
-if st.session_state.page == "Home":
-    st.title("🏠 Добро пожаловать!")
-    st.write("Здесь будет главная информация о сайте и его возможностях.")
 
-# --- Страница Аналитики ---
-elif st.session_state.page == "Analytics":
-    st.title("📊 Аналитика рынка труда")
+import plotly.graph_objects as go
 
-    # --- Фильтры ---
-    st.sidebar.header("Фильтры")
-    st.session_state.city = st.sidebar.selectbox("Выберите город:", ["Все"] + list(df["city"].unique()), index=["Все"] + list(df["city"].unique()).index(st.session_state.city) if st.session_state.city in df["city"].unique() else 0)
-    st.session_state.role = st.sidebar.selectbox("Выберите профессию:", ["Все"] + list(df["professional_role"].unique()), index=["Все"] + list(df["professional_role"].unique()).index(st.session_state.role) if st.session_state.role in df["professional_role"].unique() else 0)
-    st.session_state.employment_type = st.sidebar.selectbox("Выберите тип занятости:", ["Все"] + list(df["employment_type"].unique()), index=["Все"] + list(df["employment_type"].unique()).index(st.session_state.employment_type) if st.session_state.employment_type in df["employment_type"].unique() else 0)
-    st.session_state.experience = st.sidebar.selectbox("Выберите опыт работы:", ["Все"] + list(df["experience"].unique()), index=["Все"] + list(df["experience"].unique()).index(st.session_state.experience) if st.session_state.experience in df["experience"].unique() else 0)
+# 💰 Улучшенная гистограмма зарплат с градиентом
+st.markdown("<h2 class='sub-title'>💰 Распределение зарплат</h2>", unsafe_allow_html=True)
 
-    st.sidebar.button("🔄 Сбросить фильтры", on_click=reset_filters)
+# Фильтруем данные, убираем пропущенные значения
+salary_filtered = filtered_df.dropna(subset=["salary_from"])
+# Создаем бины для гистограммы
+hist_data = go.Histogram(
+    x=salary_filtered["salary_from"],
+    nbinsx=30,
+    marker=dict(
+        color=salary_filtered["salary_from"],  # Цвет зависит от значения
+        colorscale="Bluered",  # Градиент от синего к красному
+        showscale=True,  # Добавляем легенду сбоку
+        colorbar=dict(title="Уровень зарплаты")  # Заголовок легенды
+    )
+)
 
-    # --- Фильтрация данных ---
-    filtered_df = df.copy()
-    if st.session_state.city != "Все":
-        filtered_df = filtered_df[filtered_df["city"] == st.session_state.city]
-    if st.session_state.role != "Все":
-        filtered_df = filtered_df[filtered_df["professional_role"] == st.session_state.role]
-    if st.session_state.employment_type != "Все":
-        filtered_df = filtered_df[filtered_df["employment_type"] == st.session_state.employment_type]
-    if st.session_state.experience != "Все":
-        filtered_df = filtered_df[filtered_df["experience"] == st.session_state.experience]
+# Создаем фигуру
+fig_salary = go.Figure(data=[hist_data])
 
-    # --- Карта вакансий ---
-    st.subheader("🌍 Карта вакансий")
-    if "latitude" in filtered_df.columns and "longitude" in filtered_df.columns and not filtered_df.empty:
-        fig_map = px.scatter_mapbox(
-            filtered_df, 
-            lat="latitude", lon="longitude", 
-            hover_name="name", 
-            hover_data=["salary_from", "salary_currency", "employer_name"], 
-            zoom=4
-        )
-        fig_map.update_layout(mapbox_style="open-street-map", margin={"r":0, "t":0, "l":0, "b":0})
-        st.plotly_chart(fig_map, use_container_width=True)
-        st.write(f"В выбранном регионе представлено {len(filtered_df)} вакансий.")
-    else:
-        st.warning("Нет данных с координатами для отображения карты.")
+# Настраиваем стиль
+fig_salary.update_layout(
+    title="Распределение вакансий по зарплатам",
+    xaxis_title="Зарплата",
+    yaxis_title="Количество вакансий",
+    margin=dict(l=40, r=40, t=40, b=40),  
+)
 
-# --- Страница Университетов ---
-elif st.session_state.page == "Universities":
-    st.title("🎓 Университеты")
-    st.write("Раздел о университетах и образовании.")
+st.plotly_chart(fig_salary, use_container_width=True)
+
+
+# 📌 Типы занятости и опыт работы (рядом)
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown("<h2 class='sub-title'>📌 Типы занятости</h2>", unsafe_allow_html=True)
+    employment_counts = filtered_df["employment_type"].value_counts().reset_index()
+    employment_counts.columns = ["employment_type", "count"]
+    fig_employment = px.pie(employment_counts, names="employment_type", values="count", color_discrete_sequence=px.colors.qualitative.Set2)
+    fig_employment.update_traces(textinfo="percent+label")
+    st.plotly_chart(fig_employment, use_container_width=True)
+
+with col2:
+    st.markdown("<h2 class='sub-title'>🎯 Опыт работы</h2>", unsafe_allow_html=True)
+    experience_counts = filtered_df["experience"].value_counts().reset_index()
+    experience_counts.columns = ["experience", "count"]
+    fig_experience = px.pie(experience_counts, names="experience", values="count", color_discrete_sequence=px.colors.qualitative.Pastel)
+    fig_experience.update_traces(textinfo="percent+label")
+    st.plotly_chart(fig_experience, use_container_width=True)
+
+# 🏢 Топ-10 работодателей
+st.markdown("<h2 class='sub-title'>🏢 Топ-10 работодателей</h2>", unsafe_allow_html=True)
+top_employers = df["employer_name"].value_counts().nlargest(10).reset_index()
+top_employers.columns = ["employer_name", "count"]
+fig_employers = px.bar(top_employers, x="employer_name", y="count", color="employer_name", color_discrete_sequence=px.colors.qualitative.Set3)
+fig_employers.update_layout(xaxis_title="Работодатель", yaxis_title="Количество вакансий", xaxis_tickangle=-45)
+st.plotly_chart(fig_employers, use_container_width=True)
