@@ -1,99 +1,92 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 import pandas as pd
 import plotly.express as px
+import os  
 
 app = Flask(__name__)
 
 # Загружаем данные
-df = pd.read_csv("job_market_data.csv")
+df = pd.read_csv("vacancies_january_2.csv")
 
-@app.route("/", methods=["GET"])
-def index():
-    """Главная страница с фильтрами"""
-    return render_template(
-        "index.html",
-        regions=df["Region"].dropna().unique(),
-        industries=df["Industry"].dropna().unique(),
-        professions=df["Profession"].dropna().unique()
-    )
+# Создаем папку для графиков, если её нет
+if not os.path.exists("static"):
+    os.makedirs("static")
 
-@app.route("/chart", methods=["POST"])
-def chart():
-    """Обновляет графики в зависимости от фильтров"""
-    data = request.json
-    selected_region = data.get("region")
-    selected_industry = data.get("industry")
-    selected_profession = data.get("profession")
+@app.route("/")
+def home():
+    return render_template("home.html")  # Заглушка для главной страницы
 
+@app.route("/analytics")
+def analytics():
+    city = request.args.get("city")  
     filtered_df = df.copy()
-    if selected_region:
-        filtered_df = filtered_df[filtered_df["Region"] == selected_region]
-    if selected_industry:
-        filtered_df = filtered_df[filtered_df["Industry"] == selected_industry]
-    if selected_profession:
-        filtered_df = filtered_df[filtered_df["Profession"] == selected_profession]
 
-    # 1️⃣ Средняя зарплата по профессиям
-    if "Salary" in filtered_df.columns and not filtered_df["Salary"].isna().all():
-        salary_data = filtered_df.groupby("Profession", as_index=False)["Salary"].mean()
-        salary_chart = px.bar(
-            salary_data,
-            x="Profession",
-            y="Salary",
-            title="Средняя зарплата по профессиям",
-            labels={"Salary": "Зарплата (USD)", "Profession": "Профессия"},
-            color="Salary"
-        ).to_html(full_html=False) if not salary_data.empty else "<p>Нет данных для построения графика</p>"
-    else:
-        salary_chart = "<p>Колонка 'Salary' отсутствует в данных</p>"
+    # Получаем список уникальных городов
+    cities = sorted(df["city"].dropna().unique())
 
-    # 2️⃣ Соотношение вакансий и резюме
-    if "Job Openings" in filtered_df.columns and "Resumes" in filtered_df.columns and not filtered_df[["Job Openings", "Resumes"]].isna().all().all():
-        demand_supply_data = filtered_df.groupby("Profession", as_index=False)[["Job Openings", "Resumes"]].sum()
-        demand_supply_chart = px.line(
-            demand_supply_data,
-            x="Profession",
-            y=["Job Openings", "Resumes"],
-            title="Спрос (вакансии) vs предложение (резюме)",
-            labels={"value": "Количество", "Profession": "Профессия"},
-            markers=True
-        ).to_html(full_html=False) if not demand_supply_data.empty else "<p>Нет данных о вакансиях и резюме</p>"
-    else:
-        demand_supply_chart = "<p>Данные о вакансиях и резюме отсутствуют</p>"
+    if city:
+        filtered_df = filtered_df[filtered_df["city"] == city]
 
-    # 3️⃣ Популярные навыки среди работодателей
-    if "Skills" in filtered_df.columns and not filtered_df["Skills"].isna().all():
-        skills_data = filtered_df["Skills"].dropna().str.split(", ").explode().value_counts().reset_index().head(10)
-        skills_chart = px.bar(
-            skills_data,
-            x="index",
-            y="Skills",
-            title="Топ-10 востребованных навыков",
-            labels={"index": "Навык", "Skills": "Количество упоминаний"},
-            color="Skills"
-        ).to_html(full_html=False) if not skills_data.empty else "<p>Нет данных о навыках</p>"
-    else:
-        skills_chart = "<p>Колонка 'Skills' отсутствует в данных</p>"
+    # Если данных нет, передаем в шаблон флаг
+    no_data = filtered_df.empty
 
-    # 4️⃣ Количество вакансий по отраслям
-    if "Industry" in filtered_df.columns and not filtered_df["Industry"].isna().all():
-        industry_data = filtered_df["Industry"].value_counts().reset_index()
-        industry_chart = px.pie(
-            industry_data,
-            names="index",
-            values="Industry",
-            title="Количество вакансий по отраслям",
-            labels={"index": "Отрасль", "Industry": "Количество вакансий"}
-        ).to_html(full_html=False) if not industry_data.empty else "<p>Нет данных по отраслям</p>"
-    else:
-        industry_chart = "<p>Колонка 'Industry' отсутствует в данных</p>"
+    if not no_data:
+        # Топ-10 профессий
+        top_jobs = filtered_df['name'].value_counts().nlargest(10)
+        fig1 = px.bar(
+            x=top_jobs.index, 
+            y=top_jobs.values, 
+            title="Топ-10 профессий",
+            labels={'x': 'Профессия', 'y': 'Количество'},
+            color=top_jobs.index,
+            color_discrete_sequence=px.colors.qualitative.Pastel
+        )
+        fig1.write_html("static/chart1.html")
 
-    return jsonify({
-        "salary_chart": salary_chart,
-        "demand_supply_chart": demand_supply_chart,
-        "skills_chart": skills_chart,
-        "industry_chart": industry_chart
-    })
+        # Распределение зарплат
+        if "salary_from" in filtered_df.columns and not filtered_df["salary_from"].isna().all():
+            filtered_df["salary_from"] = pd.to_numeric(filtered_df["salary_from"], errors="coerce")
+            filtered_df = filtered_df.dropna(subset=["salary_from"])
 
-if __name__ == "__main__":
+            if not filtered_df.empty:
+                fig2 = px.histogram(
+                    filtered_df, 
+                    x="salary_from", 
+                    title="Распределение зарплат",
+                    labels={'salary_from': 'Зарплата'},
+                    color_discrete_sequence=["#2ca02c"]
+                )
+                fig2.write_html("static/chart2.html")
+
+    # Топ-10 городов по вакансиям
+    city_counts = df["city"].value_counts().nlargest(10)
+    fig3 = px.bar(
+        x=city_counts.index, 
+        y=city_counts.values, 
+        title="Топ-10 городов по количеству вакансий",
+        labels={'x': 'Город', 'y': 'Количество вакансий'},
+        color=city_counts.index,
+        color_discrete_sequence=px.colors.qualitative.Vivid
+    )
+    fig3.write_html("static/chart3.html")
+
+    # Средняя зарплата по городам
+    salary_by_city = df.groupby("city")["salary_from"].mean().nlargest(10)
+    fig4 = px.bar(
+        x=salary_by_city.index, 
+        y=salary_by_city.values, 
+        title="Средняя зарплата по городам",
+        labels={'x': 'Город', 'y': 'Средняя зарплата'},
+        color=salary_by_city.index,
+        color_discrete_sequence=px.colors.qualitative.Bold
+    )
+    fig4.write_html("static/chart4.html")
+
+    return render_template("index.html", city=city, cities=cities, no_data=no_data)
+
+@app.route("/universities")
+def universities():
+    return render_template("universities.html")
+
+if name == "__main__":
     app.run(debug=True)
