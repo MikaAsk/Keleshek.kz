@@ -21,9 +21,14 @@ st.sidebar.button("🏠 Home", on_click=lambda: navigate("Home"))
 st.sidebar.button("📊 Analytics", on_click=lambda: navigate("Analytics"))
 st.sidebar.button("🎓 Universities", on_click=lambda: navigate("Universities"))
 
+# --- Функция загрузки HTML-контента ---
+def load_html(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+# --- Логика страниц ---
 if st.session_state.page == "Home":
-    st.title("🏠 Добро пожаловать!")
-    st.write("Здесь будет главная информация о сайте и его возможностях.")
+    st.components.v1.html(load_html("static/home.html"), height=600, scrolling=True)
 
 elif st.session_state.page == "Analytics":
     st.title("📊 Аналитика рынка труда")
@@ -34,10 +39,10 @@ elif st.session_state.page == "Analytics":
     role = st.sidebar.selectbox("Выберите профессию:", ["Все"] + list(df["professional_role"].unique()))
     employment_type = st.sidebar.selectbox("Выберите тип занятости:", ["Все"] + list(df["employment_type"].unique()))
     experience = st.sidebar.selectbox("Выберите опыт работы:", ["Все"] + list(df["experience"].unique()))
-    
+
     if st.sidebar.button("Сбросить фильтры"):
         city, role, employment_type, experience = "Все", "Все", "Все", "Все"
-    
+
     filtered_df = df.copy()
     if city != "Все":
         filtered_df = filtered_df[filtered_df["city"] == city]
@@ -47,7 +52,7 @@ elif st.session_state.page == "Analytics":
         filtered_df = filtered_df[filtered_df["employment_type"] == employment_type]
     if experience != "Все":
         filtered_df = filtered_df[filtered_df["experience"] == experience]
-    
+
     # --- Карта вакансий ---
     st.subheader("🌍 Карта вакансий")
     if "latitude" in filtered_df.columns and "longitude" in filtered_df.columns:
@@ -66,9 +71,62 @@ elif st.session_state.page == "Analytics":
         st.write(f"В выбранном регионе представлено {len(filtered_df)} вакансий.")
     else:
         st.warning("Нет данных с координатами для отображения карты.")
-    
-    # --- Остальные визуализации --- (оставляем без изменений)
+
+    # --- Средняя зарплата по городам и профессиям ---
+    st.subheader("📈 Средняя зарплата по городам и профессиям")
+    salary_data = filtered_df.groupby(["city", "professional_role"])["salary_from"].mean().reset_index()
+    if not salary_data.empty:
+        fig_salary = px.bar(
+            salary_data, 
+            x="city", 
+            y="salary_from", 
+            color="professional_role", 
+            title="Средняя зарплата по городам"
+        )
+        st.plotly_chart(fig_salary, use_container_width=True)
+    else:
+        st.warning("Нет данных для построения графика средней зарплаты.")
+
+    # --- Распределение зарплат ---
+    st.subheader("📊 Распределение зарплат")
+    if "salary_from" in filtered_df.columns and not filtered_df["salary_from"].isna().all():
+        fig_salary_dist = px.histogram(
+            filtered_df, 
+            x="salary_from", 
+            title="Распределение уровня зарплат",
+            nbins=20
+        )
+        st.plotly_chart(fig_salary_dist, use_container_width=True)
+    else:
+        st.warning("Нет данных для построения распределения зарплат.")
+
+    # --- Доля типов занятости и опыта ---
+    st.subheader("📌 Доля типов занятости и опыта")
+    employment_counts = filtered_df["employment_type"].value_counts().reset_index()
+    if not employment_counts.empty:
+        fig_employment = px.pie(
+            employment_counts, 
+            names="index", 
+            values="employment_type", 
+            title="Распределение типов занятости"
+        )
+        st.plotly_chart(fig_employment, use_container_width=True)
+    else:
+        st.warning("Нет данных о типах занятости.")
+
+    # --- Востребованные профессии ---
+    st.subheader("🔥 Востребованные профессии")
+    role_counts = filtered_df["professional_role"].value_counts().reset_index()
+    if not role_counts.empty:
+        fig_roles = px.bar(
+            role_counts.head(10), 
+            x="index", 
+            y="professional_role", 
+            title="Топ-10 самых востребованных профессий"
+        )
+        st.plotly_chart(fig_roles, use_container_width=True)
+    else:
+        st.warning("Нет данных о востребованных профессиях.")
 
 elif st.session_state.page == "Universities":
-    st.title("🎓 Университеты")
-    st.write("Раздел о университетах и образовании.")
+    st.components.v1.html(load_html("static/universities.html"), height=600, scrolling=True)
