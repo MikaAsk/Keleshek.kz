@@ -2,70 +2,115 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Аналитика рынка труда</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Анализ вакансий</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        nav {
+            background: #343a40;
+            padding: 15px;
+            text-align: center;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 15px;
+            font-size: 18px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .filter-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .no-data {
+            text-align: center;
+            font-size: 20px;
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>📊 Дашборд аналитики рынка труда</h1>
 
-    <form id="filters">
-        <label>Регион:</label>
-        <select name="region">
-            <option value="">Все</option>
-            {% for region in regions %}
-                <option value="{{ region }}">{{ region }}</option>
-            {% endfor %}
-        </select>
+    <nav>
+        <a href="/">🏠 Главная</a>
+        <a href="/universities">🎓 Университеты</a>
+        <a href="/analytics">📊 Аналитика</a>
+    </nav>
 
-        <label>Отрасль:</label>
-        <select name="industry">
-            <option value="">Все</option>
-            {% for industry in industries %}
-                <option value="{{ industry }}">{{ industry }}</option>
-            {% endfor %}
-        </select>
+    <div class="container">
+        <h1>📈 Анализ вакансий</h1>
 
-        <label>Профессия:</label>
-        <select name="profession">
-            <option value="">Все</option>
-            {% for profession in professions %}
-                <option value="{{ profession }}">{{ profession }}</option>
-            {% endfor %}
-        </select>
+        <div class="filter-section">
+            <form action="/analytics" method="get">
+                <label for="city">Выберите город:</label>
+                <select name="city" id="city">
+                    <option value="">Все</option>
+                    {% for c in cities %}
+                        <option value="{{ c }}" {% if city == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Фильтровать</button>
+            </form>
+        </div>
 
-        <button type="submit">🔍 Анализировать</button>
-    </form>
-
-    <div id="charts">
-        <p>Выберите фильтры и нажмите "Анализировать"</p>
+        {% if no_data %}
+            <p class="no-data">⚠️ Данных по выбранному городу нет!</p>
+        {% else %}
+            <h2>Графики</h2>
+            <div class="charts">
+                <iframe src="{{ url_for('static', filename='chart1.html') }}"></iframe>
+                <iframe src="{{ url_for('static', filename='chart2.html') }}"></iframe>
+                <iframe src="{{ url_for('static', filename='chart3.html') }}"></iframe>
+                <iframe src="{{ url_for('static', filename='chart4.html') }}"></iframe>
+            </div>
+        {% endif %}
     </div>
 
-    <script>
-        $(document).ready(function() {
-            $("#filters").submit(function(event) {
-                event.preventDefault();
-                $.ajax({
-                    type: "POST",
-                    url: "/chart",
-                    contentType: "application/json",
-                    data: JSON.stringify({
-                        region: $("select[name='region']").val(),
-                        industry: $("select[name='industry']").val(),
-                        profession: $("select[name='profession']").val()
-                    }),
-                    success: function(response) {
-                        $("#charts").html(
-                            response.salary_chart +
-                            response.demand_supply_chart +
-                            response.skills_chart +
-                            response.industry_chart
-                        );
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 </html>
