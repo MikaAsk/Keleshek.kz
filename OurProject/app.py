@@ -103,11 +103,13 @@ elif st.session_state.page == "Analytics":
     # --- Доля типов занятости и опыта ---
     st.subheader("📌 Доля типов занятости и опыта")
     employment_counts = filtered_df["employment_type"].value_counts().reset_index()
+    employment_counts.columns = ["employment_type", "count"]
+    
     if not employment_counts.empty:
         fig_employment = px.pie(
             employment_counts, 
-            names="index", 
-            values="employment_type", 
+            names="employment_type", 
+            values="count", 
             title="Распределение типов занятости"
         )
         st.plotly_chart(fig_employment, use_container_width=True)
@@ -117,11 +119,13 @@ elif st.session_state.page == "Analytics":
     # --- Востребованные профессии ---
     st.subheader("🔥 Востребованные профессии")
     role_counts = filtered_df["professional_role"].value_counts().reset_index()
+    role_counts.columns = ["professional_role", "count"]
+    
     if not role_counts.empty:
         fig_roles = px.bar(
             role_counts.head(10), 
-            x="index", 
-            y="professional_role", 
+            x="professional_role", 
+            y="count", 
             title="Топ-10 самых востребованных профессий"
         )
         st.plotly_chart(fig_roles, use_container_width=True)
