@@ -74,26 +74,40 @@ fig4 = px.pie(
 st.plotly_chart(fig4)
 
 # --- Топ-10 работодателей ---
-st.subheader("🏢 Топ-10 работодателей по количеству вакансий")
-top_employers = df["employer_name"].value_counts().nlargest(10).reset_index()
+st.subheader("🏢 Топ-20 работодателей по количеству вакансий")
+top_employers = df["employer_name"].value_counts().nlargest(20).reset_index()
 top_employers.columns = ["employer_name", "count"]
 fig5 = px.bar(
     top_employers, 
     x="employer_name", 
     y="count", 
-    title="Топ-10 работодателей по количеству вакансий", 
+    title="Топ-20 работодателей по количеству вакансий", 
     color="employer_name"
 )
 st.plotly_chart(fig5)
 
 # --- Востребованность профессии ---
 st.subheader("📊 Востребованность профессии")
-demand_counts = filtered_df["professional_role"].value_counts().reset_index()
+
+# Выбираем топ-10 профессий по количеству вакансий
+demand_counts = filtered_df["professional_role"].value_counts().nlargest(20).reset_index()
 demand_counts.columns = ["professional_role", "count"]
+
+# Строим график
 fig_demand = px.bar(
     demand_counts, 
     x="professional_role", 
     y="count", 
-    title="Количество вакансий по профессиям"
+    title="Топ-20 востребованных профессий",
+    color="count",
+    color_continuous_scale="Blues"
 )
+
+# Добавляем стилизацию
+fig_demand.update_layout(
+    xaxis_title="Профессия",
+    yaxis_title="Количество вакансий",
+    xaxis_tickangle=-45
+)
+
 st.plotly_chart(fig_demand)
