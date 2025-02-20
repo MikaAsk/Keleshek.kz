@@ -1,8 +1,9 @@
 Region,Industry,Profession,Salary,Job Openings,Resumes,Skills
-Kazakhstan,IT,Data Analyst,300000,120,90,Python, SQL, Power BI
-Kazakhstan,IT,Software Engineer,450000,200,150,Python, Java, AWS
-Kazakhstan,Finance,Financial Analyst,350000,80,60,Excel, SQL, Risk Analysis
-Russia,IT,Data Scientist,500000,180,120,Python, ML, Deep Learning
-Russia,Marketing,Marketing Manager,400000,100,80,SEO, Google Ads, Analytics
-USA,IT,Software Engineer,700000,250,200,Python, Java, Cloud Computing
-USA,Finance,Investment Banker,900000,50,40,Excel, Finance, M&A
+Kazakhstan,IT,Data Analyst,300000,120,90,Python; SQL; Power BI
+Kazakhstan,IT,Software Engineer,450000,200,150,Python; Java; AWS
+Kazakhstan,Finance,Financial Analyst,350000,80,60,Excel; SQL; Risk Analysis
+Russia,IT,Data Scientist,500000,180,120,Python; ML; Deep Learning
+Russia,Marketing,Marketing Manager,400000,100,80,SEO; Google Ads; Analytics
+USA,IT,Software Engineer,700000,250,200,Python; Java; Cloud Computing
+USA,Finance,Investment Banker,900000,50,40,Excel; Finance; M&A
+
