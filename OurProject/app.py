@@ -51,11 +51,29 @@ if not filtered_df.empty:
 else:
     st.warning("⚠️ Нет данных для отображения карты.")
 
-# 📊 Распределение зарплат
+# 💰 Улучшенный график распределения зарплат
 st.markdown("<h2 class='sub-title'>💰 Распределение зарплат</h2>", unsafe_allow_html=True)
-fig_salary = px.histogram(filtered_df, x="salary_from", nbins=20, color_discrete_sequence=['#1f77b4'])
-fig_salary.update_layout(bargap=0.2)
+
+# Фильтруем данные, убираем пропущенные значения
+salary_filtered = filtered_df.dropna(subset=["salary_from"])
+
+# Выбор типа визуализации
+chart_type = st.selectbox("Выберите тип графика:", ["Boxplot", "Violin Plot", "Гистограмма"], index=0)
+
+if chart_type == "Boxplot":
+    fig_salary = px.box(salary_filtered, y="salary_from", points="all", color_discrete_sequence=['#1f77b4'])
+    fig_salary.update_layout(yaxis_title="Зарплата", xaxis_title="")
+
+elif chart_type == "Violin Plot":
+    fig_salary = px.violin(salary_filtered, y="salary_from", box=True, points="all", color_discrete_sequence=['#ff7f0e'])
+    fig_salary.update_layout(yaxis_title="Зарплата", xaxis_title="")
+
+else:  # Гистограмма
+    fig_salary = px.histogram(salary_filtered, x="salary_from", nbins=20, color_discrete_sequence=['#2ca02c'])
+    fig_salary.update_layout(yaxis_title="Частота", xaxis_title="Зарплата", bargap=0.2)
+
 st.plotly_chart(fig_salary, use_container_width=True)
+
 
 # 📌 Типы занятости и опыт работы (рядом)
 col1, col2 = st.columns(2)
