@@ -25,15 +25,25 @@ if role != "Все":
 # Удаляем строки с пустыми координатами
 filtered_df = filtered_df.dropna(subset=["latitude", "longitude"])
 
-# --- 2. Карта вакансий ---
+# --- 2. Карта вакансий (Plotly Mapbox) ---
 st.subheader("🌍 Карта вакансий")
-m = folium.Map(location=[df["latitude"].mean(), df["longitude"].mean()], zoom_start=5)
-for _, row in filtered_df.iterrows():
-    folium.Marker(
-        location=[row["latitude"], row["longitude"]],
-        popup=f"{row['name']} - {row['salary_from']} {row['salary_currency']}",
-    ).add_to(m)
-st_folium(m, width=700, height=500)
+
+# Проверяем, есть ли координаты
+if "latitude" in filtered_df.columns and "longitude" in filtered_df.columns:
+    filtered_df = filtered_df.dropna(subset=["latitude", "longitude"])
+
+    fig_map = px.scatter_mapbox(
+        filtered_df, 
+        lat="latitude", lon="longitude", 
+        hover_name="name", 
+        hover_data=["salary_from", "salary_currency", "employer_name"], 
+        zoom=4, height=500
+    )
+
+    fig_map.update_layout(mapbox_style="open-street-map", margin={"r":0,"t":0,"l":0,"b":0})
+    st.plotly_chart(fig_map)
+else:
+    st.warning("Нет данных с координатами для отображения карты.")
 
 # --- 3. Распределение зарплат ---
 st.subheader("💰 Распределение зарплат")
