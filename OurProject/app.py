@@ -11,7 +11,6 @@ def load_data():
     return pd.read_csv("vacancies_january_2.csv")
 
 df = load_data()
-
 # --- Фильтры ---
 st.sidebar.header("Фильтры")
 city = st.sidebar.selectbox("Выберите город:", ["Все"] + list(df["city"].unique()))
@@ -23,11 +22,8 @@ if city != "Все":
 if role != "Все":
     filtered_df = filtered_df[filtered_df["professional_role"] == role]
 
-# --- 1. Средняя зарплата по городам ---
-st.subheader("📊 Средняя зарплата по городам")
-salary_by_city = df.groupby("city")["salary_from"].mean().reset_index()
-fig1 = px.bar(salary_by_city, x="city", y="salary_from", title="Средняя зарплата по городам", color="salary_from")
-st.plotly_chart(fig1)
+# Удаляем строки с пустыми координатами
+filtered_df = filtered_df.dropna(subset=["latitude", "longitude"])
 
 # --- 2. Карта вакансий ---
 st.subheader("🌍 Карта вакансий")
