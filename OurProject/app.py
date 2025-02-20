@@ -52,9 +52,20 @@ st.plotly_chart(fig2)
 
 # --- 4. Доля типов занятости ---
 st.subheader("📌 Типы занятости")
+
+# Считаем количество вакансий для каждого типа занятости
 employment_counts = filtered_df["employment_type"].value_counts().reset_index()
-fig3 = px.pie(employment_counts, names="index", values="employment_type", title="Доля типов занятости")
+employment_counts.columns = ["employment_type", "count"]  # Переименовываем колонки
+
+fig3 = px.pie(
+    employment_counts, 
+    names="employment_type", 
+    values="count", 
+    title="Доля типов занятости"
+)
+
 st.plotly_chart(fig3)
+
 
 # --- 5. Требуемый опыт работы ---
 st.subheader("🎯 Требуемый опыт работы")
