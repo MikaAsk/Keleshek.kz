@@ -5,7 +5,7 @@ import plotly.express as px
 app = Flask(__name__)
 
 # Загружаем данные
-df = pd.read_csv("job_market_data.csv", delimiter=",")
+df = pd.read_csv("job_market_data.csv")
 
 @app.route("/", methods=["GET"])
 def index():
