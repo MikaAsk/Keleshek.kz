@@ -69,12 +69,33 @@ st.plotly_chart(fig3)
 
 # --- 5. Требуемый опыт работы ---
 st.subheader("🎯 Требуемый опыт работы")
+
+# Считаем количество вакансий для каждого опыта
 experience_counts = filtered_df["experience"].value_counts().reset_index()
-fig4 = px.pie(experience_counts, names="index", values="experience", title="Распределение по опыту работы")
+experience_counts.columns = ["experience", "count"]  # Переименовываем колонки
+
+fig4 = px.pie(
+    experience_counts, 
+    names="experience", 
+    values="count", 
+    title="Распределение по опыту работы"
+)
+
 st.plotly_chart(fig4)
 
-# --- 6. Топ-10 работодателей по количеству вакансий ---
+
 st.subheader("🏢 Топ-10 работодателей по количеству вакансий")
+
+# Считаем количество вакансий у каждого работодателя
 top_employers = df["employer_name"].value_counts().nlargest(10).reset_index()
-fig5 = px.bar(top_employers, x="index", y="employer_name", title="Топ-10 работодателей", color="employer_name")
+top_employers.columns = ["employer_name", "count"]  # Переименовываем колонки
+
+fig5 = px.bar(
+    top_employers, 
+    x="employer_name", 
+    y="count", 
+    title="Топ-10 работодателей по количеству вакансий", 
+    color="employer_name"
+)
+
 st.plotly_chart(fig5)
