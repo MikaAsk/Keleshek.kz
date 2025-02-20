@@ -1,21 +1,12 @@
 import os
-from flask import Flask, render_template
+from flask import Flask
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('home.html')
-
-@app.route('/analytics')
-def analytics():
-    return render_template('analytics.html')
-
-@app.route('/universities')
-def universities():
-    return render_template('universities.html')
+    return "Сервис работает!"
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Render задаёт PORT, если нет — используем 5000
+    port = int(os.environ.get("PORT", 5000))  # Берём порт из переменной окружения
     app.run(host="0.0.0.0", port=port)
-
