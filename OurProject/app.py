@@ -34,46 +34,59 @@ def chart():
         filtered_df = filtered_df[filtered_df["Profession"] == selected_profession]
 
     # 1️⃣ Средняя зарплата по профессиям
-    salary_chart = px.bar(
-        filtered_df.groupby("Profession")["Salary"].mean().reset_index(),
-        x="Profession",
-        y="Salary",
-        title="Средняя зарплата по профессиям",
-        labels={"Salary": "Зарплата (USD)", "Profession": "Профессия"},
-        color="Salary"
-    ).to_html(full_html=False)
+    if "Salary" in filtered_df.columns and not filtered_df["Salary"].isna().all():
+        salary_data = filtered_df.groupby("Profession", as_index=False)["Salary"].mean()
+        salary_chart = px.bar(
+            salary_data,
+            x="Profession",
+            y="Salary",
+            title="Средняя зарплата по профессиям",
+            labels={"Salary": "Зарплата (USD)", "Profession": "Профессия"},
+            color="Salary"
+        ).to_html(full_html=False) if not salary_data.empty else "<p>Нет данных для построения графика</p>"
+    else:
+        salary_chart = "<p>Колонка 'Salary' отсутствует в данных</p>"
 
     # 2️⃣ Соотношение вакансий и резюме
-    demand_supply_chart = px.line(
-        filtered_df.groupby("Profession")[["Job Openings", "Resumes"]].sum().reset_index(),
-        x="Profession",
-        y=["Job Openings", "Resumes"],
-        title="Спрос (вакансии) vs предложение (резюме)",
-        labels={"value": "Количество", "Profession": "Профессия"},
-        markers=True
-    ).to_html(full_html=False)
+    if "Job Openings" in filtered_df.columns and "Resumes" in filtered_df.columns and not filtered_df[["Job Openings", "Resumes"]].isna().all().all():
+        demand_supply_data = filtered_df.groupby("Profession", as_index=False)[["Job Openings", "Resumes"]].sum()
+        demand_supply_chart = px.line(
+            demand_supply_data,
+            x="Profession",
+            y=["Job Openings", "Resumes"],
+            title="Спрос (вакансии) vs предложение (резюме)",
+            labels={"value": "Количество", "Profession": "Профессия"},
+            markers=True
+        ).to_html(full_html=False) if not demand_supply_data.empty else "<p>Нет данных о вакансиях и резюме</p>"
+    else:
+        demand_supply_chart = "<p>Данные о вакансиях и резюме отсутствуют</p>"
 
     # 3️⃣ Популярные навыки среди работодателей
     if "Skills" in filtered_df.columns and not filtered_df["Skills"].isna().all():
+        skills_data = filtered_df["Skills"].dropna().str.split(", ").explode().value_counts().reset_index().head(10)
         skills_chart = px.bar(
-            filtered_df["Skills"].dropna().str.split(", ").explode().value_counts().reset_index().head(10),
+            skills_data,
             x="index",
             y="Skills",
             title="Топ-10 востребованных навыков",
             labels={"index": "Навык", "Skills": "Количество упоминаний"},
             color="Skills"
-        ).to_html(full_html=False)
+        ).to_html(full_html=False) if not skills_data.empty else "<p>Нет данных о навыках</p>"
     else:
-        skills_chart = "<p>Нет данных о навыках</p>"
+        skills_chart = "<p>Колонка 'Skills' отсутствует в данных</p>"
 
     # 4️⃣ Количество вакансий по отраслям
-    industry_chart = px.pie(
-        filtered_df["Industry"].value_counts().reset_index(),
-        names="index",
-        values="Industry",
-        title="Количество вакансий по отраслям",
-        labels={"index": "Отрасль", "Industry": "Количество вакансий"}
-    ).to_html(full_html=False)
+    if "Industry" in filtered_df.columns and not filtered_df["Industry"].isna().all():
+        industry_data = filtered_df["Industry"].value_counts().reset_index()
+        industry_chart = px.pie(
+            industry_data,
+            names="index",
+            values="Industry",
+            title="Количество вакансий по отраслям",
+            labels={"index": "Отрасль", "Industry": "Количество вакансий"}
+        ).to_html(full_html=False) if not industry_data.empty else "<p>Нет данных по отраслям</p>"
+    else:
+        industry_chart = "<p>Колонка 'Industry' отсутствует в данных</p>"
 
     return jsonify({
         "salary_chart": salary_chart,
