@@ -32,13 +32,13 @@ if st.session_state.page == "Home":
 
 elif st.session_state.page == "Analytics":
     st.title("📊 Аналитика рынка труда")
-
+    
     # --- Фильтры ---
     st.sidebar.header("Фильтры")
-    city = st.sidebar.selectbox("Выберите город:", ["Все"] + list(df["city"].unique()))
-    role = st.sidebar.selectbox("Выберите профессию:", ["Все"] + list(df["professional_role"].unique()))
-    employment_type = st.sidebar.selectbox("Выберите тип занятости:", ["Все"] + list(df["employment_type"].unique()))
-    experience = st.sidebar.selectbox("Выберите опыт работы:", ["Все"] + list(df["experience"].unique()))
+    city = st.sidebar.selectbox("Выберите город:", ["Все"] + list(df["city"].dropna().unique()))
+    role = st.sidebar.selectbox("Выберите профессию:", ["Все"] + list(df["professional_role"].dropna().unique()))
+    employment_type = st.sidebar.selectbox("Выберите тип занятости:", ["Все"] + list(df["employment_type"].dropna().unique()))
+    experience = st.sidebar.selectbox("Выберите опыт работы:", ["Все"] + list(df["experience"].dropna().unique()))
 
     if st.sidebar.button("Сбросить фильтры"):
         city, role, employment_type, experience = "Все", "Все", "Все", "Все"
@@ -72,79 +72,28 @@ elif st.session_state.page == "Analytics":
     else:
         st.warning("Нет данных с координатами для отображения карты.")
 
+    # --- Средняя зарплата по городам и профессиям ---
     st.subheader("📈 Средняя зарплата по городам и профессиям")
+    filtered_df["salary_avg"] = filtered_df[["salary_from", "salary_to"]].mean(axis=1)
+    salary_data = filtered_df.groupby(["city", "professional_role"])["salary_avg"].mean().reset_index()
 
-# Расчёт средней зарплаты с учетом salary_from и salary_to
-filtered_df["salary_avg"] = filtered_df[["salary_from", "salary_to"]].mean(axis=1)
-salary_data = filtered_df.groupby(["city", "professional_role"])["salary_avg"].mean().reset_index()
-
-if not salary_data.empty:
-    # Сортировка по средней зарплате
-    salary_data = salary_data.sort_values(by="salary_avg", ascending=False)
-
-    # График
-    fig_salary = px.bar(
-        salary_data, 
-        x="city", 
-        y="salary_avg", 
-        color="professional_role", 
-        title="Средняя зарплата по городам",
-        labels={"salary_avg": "Средняя зарплата", "city": "Город", "professional_role": "Профессия"},
-        hover_name="professional_role",
-        hover_data={"salary_avg": ":.0f"},
-        height=600
-    )
-    fig_salary.update_layout(xaxis={"categoryorder": "total descending"})
-
-    st.plotly_chart(fig_salary, use_container_width=True)
-else:
-    st.warning("Нет данных для построения графика средней зарплаты.")
-
-
-    # --- Распределение зарплат ---
-    st.subheader("📊 Распределение зарплат")
-    if "salary_from" in filtered_df.columns and not filtered_df["salary_from"].isna().all():
-        fig_salary_dist = px.histogram(
-            filtered_df, 
-            x="salary_from", 
-            title="Распределение уровня зарплат",
-            nbins=20
+    if not salary_data.empty:
+        salary_data = salary_data.sort_values(by="salary_avg", ascending=False)
+        fig_salary = px.bar(
+            salary_data, 
+            x="city", 
+            y="salary_avg", 
+            color="professional_role", 
+            title="Средняя зарплата по городам",
+            labels={"salary_avg": "Средняя зарплата", "city": "Город", "professional_role": "Профессия"},
+            hover_name="professional_role",
+            hover_data={"salary_avg": ":.0f"},
+            height=600
         )
-        st.plotly_chart(fig_salary_dist, use_container_width=True)
+        fig_salary.update_layout(xaxis={"categoryorder": "total descending"})
+        st.plotly_chart(fig_salary, use_container_width=True)
     else:
-        st.warning("Нет данных для построения распределения зарплат.")
-
-    # --- Доля типов занятости и опыта ---
-    st.subheader("📌 Доля типов занятости и опыта")
-    employment_counts = filtered_df["employment_type"].value_counts().reset_index()
-    employment_counts.columns = ["employment_type", "count"]
-    
-    if not employment_counts.empty:
-        fig_employment = px.pie(
-            employment_counts, 
-            names="employment_type", 
-            values="count", 
-            title="Распределение типов занятости"
-        )
-        st.plotly_chart(fig_employment, use_container_width=True)
-    else:
-        st.warning("Нет данных о типах занятости.")
-
-    # --- Востребованные профессии ---
-    st.subheader("🔥 Востребованные профессии")
-    role_counts = filtered_df["professional_role"].value_counts().reset_index()
-    role_counts.columns = ["professional_role", "count"]
-    
-    if not role_counts.empty:
-        fig_roles = px.bar(
-            role_counts.head(10), 
-            x="professional_role", 
-            y="count", 
-            title="Топ-10 самых востребованных профессий"
-        )
-        st.plotly_chart(fig_roles, use_container_width=True)
-    else:
-        st.warning("Нет данных о востребованных профессиях.")
+        st.warning("Нет данных для построения графика средней зарплаты.")
 
 elif st.session_state.page == "Universities":
     st.components.v1.html(load_html("static/universities.html"), height=600, scrolling=True)
